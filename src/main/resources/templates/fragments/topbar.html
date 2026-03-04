@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  Fragment: topbar
+  Penggunaan:
+    <div th:replace="~{fragments/topbar :: topbar(pageTitle='Dashboard', breadcrumb='Beranda > Dashboard')}"></div>
+-->
+<header th:fragment="topbar(pageTitle, breadcrumb)" class="topbar">
+
+  <div class="topbar-left">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+      <span class="breadcrumb-item">Beranda</span>
+      <span class="breadcrumb-sep" th:if="${breadcrumb != null}">/</span>
+      <span class="breadcrumb-item" th:if="${breadcrumb != null}" th:text="${breadcrumb}">Halaman</span>
+    </nav>
+  </div>
+
+  <div class="topbar-right">
+    <!-- Notifications (placeholder) -->
+    <button class="topbar-btn" title="Notifikasi">
+      🔔
+      <span class="badge-dot" id="notifications-dot" style="display:none"></span>
+    </button>
+
+    <!-- Page Title / Current User Info -->
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;
+                background:var(--gray-100);border-radius:var(--radius-md);
+                font-size:13px;font-weight:500;color:var(--text-primary);">
+      <span>👤</span>
+      <span th:text="${#httpSession.getAttribute('username') ?: 'User'}">User</span>
+      <span class="badge badge-primary"
+            th:text="${#httpSession.getAttribute('role') ?: 'USER'}"
+            style="font-size:10px">
+        USER
+      </span>
+    </div>
+  </div>
+
+</header>
+
+</html>

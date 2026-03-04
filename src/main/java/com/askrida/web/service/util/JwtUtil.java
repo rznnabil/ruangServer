@@ -1,42 +1,43 @@
 package com.askrida.web.service.util;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Date;
 
 /**
- * JWT Utility - Generate & Validate JSON Web Tokens
- * Menggunakan HMAC-SHA256 untuk signing
+ * JWT Utility — Spring Bean.
+ * Secret key diambil dari application.properties (monitor.jwt.secret).
+ * Inject via @Autowired, bukan static call.
  */
+@Component
 public class JwtUtil {
 
-    private static final String SECRET_KEY = "ServerMonitoringSecretKey2026!@#$%^&*()AbsensiRuanganTU";
-    private static final long EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+    @Value("${monitor.jwt.secret}")
+    private String secretKey;
+
+    @Value("${monitor.jwt.expiration-ms:86400000}")
+    private long expirationMs;
+
     private static final String ALGORITHM = "HmacSHA256";
 
-    /**
-     * Generate JWT token untuk user
-     */
-    public static String generateToken(String nim, String nama, String role) {
+    // ── Token Generation ─────────────────────────────────────
+
+    public String generateToken(String nim, String nama, String role) {
         try {
             long now = System.currentTimeMillis();
-            long exp = now + EXPIRATION_MS;
+            long exp = now + expirationMs;
 
-            // Header
-            String header = base64UrlEncode("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
-
-            // Payload
+            String header  = base64UrlEncode("{\"alg\":\"HS256\",\"typ\":\"JWT\"}");
             String payloadJson = String.format(
                 "{\"nim\":\"%s\",\"nama\":\"%s\",\"role\":\"%s\",\"iat\":%d,\"exp\":%d}",
                 escapeJson(nim), escapeJson(nama), escapeJson(role), now / 1000, exp / 1000
             );
-            String payload = base64UrlEncode(payloadJson);
-
-            // Signature
-            String dataToSign = header + "." + payload;
-            String signature = hmacSha256(dataToSign, SECRET_KEY);
+            String payload   = base64UrlEncode(payloadJson);
+            String signature = hmacSha256(header + "." + payload, secretKey);
 
             return header + "." + payload + "." + signature;
         } catch (Exception e) {
@@ -44,10 +45,9 @@ public class JwtUtil {
         }
     }
 
-    /**
-     * Validate JWT token dan return payload claims
-     */
-    public static JwtClaims validateToken(String token) {
+    // ── Token Validation ─────────────────────────────────────
+
+    public JwtClaims validateToken(String token) {
         try {
             if (token == null || token.isEmpty()) {
                 return null;
@@ -64,8 +64,7 @@ public class JwtUtil {
             }
 
             // Verify signature
-            String dataToSign = parts[0] + "." + parts[1];
-            String expectedSignature = hmacSha256(dataToSign, SECRET_KEY);
+            String expectedSignature = hmacSha256(parts[0] + "." + parts[1], secretKey);
             if (!expectedSignature.equals(parts[2])) {
                 return null; // Invalid signature
             }
@@ -94,24 +93,21 @@ public class JwtUtil {
         }
     }
 
-    /**
-     * Extract authorization from request header
-     */
-    public static JwtClaims extractFromHeader(String authHeader) {
+    public JwtClaims extractFromHeader(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return null;
         }
         return validateToken(authHeader.substring(7));
     }
 
-    // ========== Helper Methods ==========
+    // ── Helpers ──────────────────────────────────────────────
 
-    private static String base64UrlEncode(String data) {
+    private String base64UrlEncode(String data) {
         return Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(data.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static String hmacSha256(String data, String secret) throws Exception {
+    private String hmacSha256(String data, String secret) throws Exception {
         Mac mac = Mac.getInstance(ALGORITHM);
         SecretKeySpec keySpec = new SecretKeySpec(
                 secret.getBytes(StandardCharsets.UTF_8), ALGORITHM);
@@ -120,7 +116,7 @@ public class JwtUtil {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(rawHmac);
     }
 
-    private static String extractJsonValue(String json, String key) {
+    private String extractJsonValue(String json, String key) {
         String searchKey = "\"" + key + "\"";
         int keyIndex = json.indexOf(searchKey);
         if (keyIndex == -1) return null;
@@ -151,7 +147,7 @@ public class JwtUtil {
         }
     }
 
-    private static String escapeJson(String value) {
+    private String escapeJson(String value) {
         if (value == null) return "";
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }

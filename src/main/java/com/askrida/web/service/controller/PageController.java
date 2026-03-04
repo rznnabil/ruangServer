@@ -1,6 +1,7 @@
 package com.askrida.web.service.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +12,7 @@ import com.askrida.web.service.repository.RepositoryTes;
 import com.askrida.web.service.repository.ServerUserRepository;
 import com.askrida.web.service.model.ServerUser;
 import com.askrida.web.service.model.RestResult;
+import com.askrida.web.service.util.PasswordUtil;
 
 import jakarta.servlet.http.HttpSession;
 import java.util.ArrayList;
@@ -26,6 +28,15 @@ public class PageController {
 
     @Autowired
     private ServerUserRepository serverUserRepo;
+
+    @Autowired
+    private PasswordUtil passwordUtil;
+
+    @Value("${app.admin.username:admin}")
+    private String adminUsername;
+
+    @Value("${app.admin.password:admin123}")
+    private String adminPassword;
 
     // ===== Helper: Check if logged in =====
     private boolean isLoggedIn(HttpSession session) {
@@ -189,8 +200,8 @@ public class PageController {
 
         if (role.equalsIgnoreCase("ADMIN")) {
             // === ADMIN LOGIN ===
-            // 1. Try hardcoded admin
-            if ("admin".equals(username) && "admin123".equals(password)) {
+            // 1. Try configurable admin credentials
+            if (adminUsername.equals(username) && adminPassword.equals(password)) {
                 session.setAttribute("loggedIn", true);
                 session.setAttribute("username", "admin");
                 session.setAttribute("role", "ADMIN");
@@ -207,7 +218,7 @@ public class PageController {
                 if (user != null && "ADMIN".equalsIgnoreCase(user.getRole()) && user.isActive()) {
                     // Check password (if password_hash is set)
                     if (user.getPasswordHash() != null && !user.getPasswordHash().isEmpty()) {
-                        if (!password.equals(user.getPasswordHash())) {
+                        if (!passwordUtil.matches(password, user.getPasswordHash())) {
                             response.put("success", false);
                             response.put("message", "Password salah");
                             return response;

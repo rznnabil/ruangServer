@@ -61,6 +61,9 @@ public class ServerMonitorController {
     @Autowired
     private AttendanceRepository attendanceRepository;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     // ======================== AUTH ========================
 
     /**
@@ -110,7 +113,7 @@ public class ServerMonitorController {
             }
 
             // Generate JWT Token
-            String token = JwtUtil.generateToken(user.getNim(), user.getNama(), user.getRole());
+            String token = jwtUtil.generateToken(user.getNim(), user.getNama(), user.getRole());
 
             // Log akses berhasil
             accessLogRepository.logGranted(user.getNim(), user.getNama(), user.getRole(), confidence, httpReq.getRemoteAddr());
@@ -172,7 +175,7 @@ public class ServerMonitorController {
             }
 
             // Generate token
-            String token = JwtUtil.generateToken(user.getNim(), user.getNama(), user.getRole());
+            String token = jwtUtil.generateToken(user.getNim(), user.getNama(), user.getRole());
 
             response.put("success", true);
             response.put("message", "Registrasi berhasil! Selamat datang, " + nama);
@@ -240,7 +243,7 @@ public class ServerMonitorController {
         Map<String, Object> response = new HashMap<>();
         try {
             // Validate admin access
-            JwtUtil.JwtClaims claims = JwtUtil.extractFromHeader(authHeader);
+            JwtUtil.JwtClaims claims = jwtUtil.extractFromHeader(authHeader);
             if (claims == null || !claims.isAdmin()) {
                 response.put("success", false);
                 response.put("message", "Akses ditolak. Hanya ADMIN yang bisa mengubah role.");
@@ -282,7 +285,7 @@ public class ServerMonitorController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            JwtUtil.JwtClaims claims = JwtUtil.extractFromHeader(authHeader);
+            JwtUtil.JwtClaims claims = jwtUtil.extractFromHeader(authHeader);
             if (claims == null || !claims.isAdmin()) {
                 response.put("success", false);
                 response.put("message", "Akses ditolak");
@@ -316,7 +319,7 @@ public class ServerMonitorController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         Map<String, Object> response = new HashMap<>();
         try {
-            JwtUtil.JwtClaims claims = JwtUtil.extractFromHeader(authHeader);
+            JwtUtil.JwtClaims claims = jwtUtil.extractFromHeader(authHeader);
             if (claims == null || !claims.isAdmin()) {
                 response.put("success", false);
                 response.put("message", "Akses ditolak. Hanya ADMIN yang bisa menghapus user.");
@@ -386,7 +389,7 @@ public class ServerMonitorController {
             // Log akses
             if (confidence >= 0.6) {
                 accessLogRepository.logGranted(user.getNim(), user.getNama(), user.getRole(), confidence, httpReq.getRemoteAddr());
-                String token = JwtUtil.generateToken(user.getNim(), user.getNama(), user.getRole());
+                String token = jwtUtil.generateToken(user.getNim(), user.getNama(), user.getRole());
 
                 response.put("success", true);
                 response.put("recognized", true);

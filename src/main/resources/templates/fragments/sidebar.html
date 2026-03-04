@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  Fragment: sidebar
+  Penggunaan di halaman lain:
+    <div th:replace="~{fragments/sidebar :: sidebar(activeMenu='dashboard')}"></div>
+  
+  activeMenu values: dashboard, face-register, face-absensi,
+                     server-monitor, server-monitor-register, user-management,
+                     expense, project, chatbot
+-->
+<aside th:fragment="sidebar(activeMenu)" class="sidebar">
+
+  <!-- Logo -->
+  <a href="/" class="sidebar-logo">
+    <div class="sidebar-logo-icon">🏢</div>
+    <span class="sidebar-logo-text">RuanganServer</span>
+  </a>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+
+    <!-- UTAMA -->
+    <div class="nav-section">
+      <div class="nav-section-title">Utama</div>
+      <a href="/"
+         th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''"
+         class="nav-item">
+        <span class="nav-item-icon">🏠</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="/user-management"
+         th:classappend="${activeMenu == 'user-management'} ? 'active' : ''"
+         class="nav-item">
+        <span class="nav-item-icon">👤</span>
+        <span>User Management</span>
+      </a>
+    </div>
+
+    <!-- ABSENSI -->
+    <div class="nav-section" th:if="${#httpSession.getAttribute('role') == 'ADMIN'}">
+      <div class="nav-section-title">Absensi</div>
+      <a href="/face-register"
+         th:classappend="${activeMenu == 'face-register'} ? 'active' : ''"
+         class="nav-item">
+        <span class="nav-item-icon">📷</span>
+        <span>Face Register</span>
+      </a>
+      <a href="/face-absensi"
+         th:classappend="${activeMenu == 'face-absensi'} ? 'active' : ''"
+         class="nav-item">
+        <span class="nav-item-icon">✅</span>
+        <span>Face Absensi</span>
+      </a>
+    </div>
+
+    <!-- SERVER MONITOR -->
+    <div class="nav-section">
+      <div class="nav-section-title">Server</div>
+      <a href="/server-monitor"
+         th:classappend="${activeMenu == 'server-monitor'} ? 'active' : ''"
+         class="nav-item">
+        <span class="nav-item-icon">🖥️</span>
+        <span>Server Monitor</span>
+      </a>
+      <a href="/server-monitor-register"
+         th:if="${#httpSession.getAttribute('role') == 'ADMIN'}"
+         th:classappend="${activeMenu == 'server-monitor-register'} ? 'active' : ''"
+         class="nav-item">
+        <span class="nav-item-icon">🔐</span>
+        <span>Register Akses</span>
+      </a>
+    </div>
+
+    <!-- MANAJEMEN -->
+    <div class="nav-section">
+      <div class="nav-section-title">Manajemen</div>
+      <a href="/expense"
+         th:classappend="${activeMenu == 'expense'} ? 'active' : ''"
+         class="nav-item">
+        <span class="nav-item-icon">💰</span>
+        <span>Expense</span>
+      </a>
+      <a href="/project"
+         th:classappend="${activeMenu == 'project'} ? 'active' : ''"
+         class="nav-item">
+        <span class="nav-item-icon">📋</span>
+        <span>Project</span>
+      </a>
+    </div>
+
+    <!-- LAINNYA -->
+    <div class="nav-section">
+      <div class="nav-section-title">Lainnya</div>
+      <a href="/chatbot"
+         th:classappend="${activeMenu == 'chatbot'} ? 'active' : ''"
+         class="nav-item">
+        <span class="nav-item-icon">🤖</span>
+        <span>Chatbot</span>
+      </a>
+    </div>
+
+  </nav>
+
+  <!-- User + Logout -->
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar"
+           th:text="${#httpSession.getAttribute('username') != null ? #httpSession.getAttribute('username').substring(0,1).toUpperCase() : 'U'}">
+        U
+      </div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name"
+             th:text="${#httpSession.getAttribute('username') ?: 'User'}">
+          User
+        </div>
+        <div class="sidebar-user-role"
+             th:text="${#httpSession.getAttribute('role') ?: 'USER'}">
+          USER
+        </div>
+      </div>
+    </div>
+    <a href="/logout" class="sidebar-logout">
+      <span>🚪</span>
+      <span>Logout</span>
+    </a>
+  </div>
+
+</aside>
+
+</html>
